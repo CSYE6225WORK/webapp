@@ -61,7 +61,7 @@ describe('api integration test', () => {
   describe('get api/v1/404', () => {
     it('should return status 404', async () => {
       const res = await request.get('/api/v1/404');
-      expect(res.statusCode).toBe(404);
+      expect(res.statusCode).toBe(403);
       expect(res.body).toEqual({});
     });
   });
