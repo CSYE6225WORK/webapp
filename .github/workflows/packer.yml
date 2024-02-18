@@ -19,6 +19,9 @@ jobs:
         uses: hashicorp/setup-packer@main
         with:
           version: "latest"
+
+      - name: "Run Packer init"
+        run: "packer init packer/version.pkr.hcl"
     
       - name: "Run Packer fmt"
         run: |
