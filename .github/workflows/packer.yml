@@ -1,0 +1,31 @@
+name: "packer-ci"
+
+on:
+  pull_request:
+   branches:
+    - main
+    - 'packer/**'
+        
+
+jobs: 
+  packer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: CheckOut
+        uses: actions/checkout@v4
+    
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: "latest"
+    
+      - name: "Run Packer fmt"
+        run: |
+            if packer fmt --check .; then
+            echo "Packer fmt found formatting issues. Please run 'packer fmt' locally and commit the changes."
+            exit 1
+            fi
+    
+      - name: "Run Packer validate"
+        run: "packer validate ."
