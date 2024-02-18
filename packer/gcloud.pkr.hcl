@@ -4,7 +4,7 @@ source "googlecompute" "centos8Image" {
   zone                = "us-east4-c"
   ssh_username        = "packer"
   image_name          = "packer-centos-stream-8-{{timestamp}}"
-  image_famil        = "packer-centos-stream-8"
+  image_famil         = "packer-centos-stream-8"
 }
 
 build {
