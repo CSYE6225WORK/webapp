@@ -39,7 +39,7 @@ describe('api integration test', () => {
   describe('get api/v1/healthz', () => {
     it('should return status 200', async () => {
       const res = await request.get('/api/v1/healthz');
-      expect(res.statusCode).toBe(201);
+      expect(res.statusCode).toBe(200);
       expect(res.body).toEqual({});
     });
 
