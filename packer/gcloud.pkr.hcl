@@ -37,7 +37,7 @@ build {
 
   // Transfer file to custom image
   provisioner "file" {
-    source      = "../temp.zip"
+    source      = "./temp.zip"
     destination = "/tmp/temp.zip"
   }
 

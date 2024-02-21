@@ -20,9 +20,6 @@ jobs:
 
       - name: Build Application Artifact
         run: "zip -r temp.zip ./ -x './packer/*' -x './.github/*' -x './node_modules/*' './.git/*'"
-
-      - name: "test"
-        run: "ls"
     
       - name: Set up Packer
         uses: hashicorp/setup-packer@main
