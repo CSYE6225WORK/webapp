@@ -5,7 +5,11 @@ name: express app
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+    paths-ignore:
+      - 'packer/**'
+
 
 jobs:
   build:

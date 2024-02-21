@@ -14,6 +14,12 @@ jobs:
     steps:
       - name: CheckOut
         uses: actions/checkout@v4
+
+      - name: Install Zip
+        uses: montudor/action-zip@v1
+
+      - name: Build Application Artifact
+        run: "zip -r temp.zip ./ -x './packer/*' -x './.github/*' -x './node_modules/*'"
     
       - name: Set up Packer
         uses: hashicorp/setup-packer@main

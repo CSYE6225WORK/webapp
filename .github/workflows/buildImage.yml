@@ -1,0 +1,90 @@
+name: build image
+on:
+  pull_request:
+    branches: ['main']
+    types: ['closed']
+
+jobs:
+  BuildImage:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    env: 
+      DATABASE_URL: mysql://root:test@localhost:3306/Test_DB
+
+    steps:
+      - name: CheckOut
+        uses: actions/checkout@v4
+
+      - name: Shutdown Ubuntu MySQL (SUDO)
+        run: sudo service mysql stop
+      
+      - name: Set up MySQL
+        uses: mirromutth/mysql-action@v1.1
+        with:
+          mysql database: 'Test_DB'
+          mysql root password: 'test'
+
+      - name: Use NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Migrate Database
+        run: npm run prisma-migrate
+        
+      - name: Run testing
+        run: npm run test
+
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: "latest"
+
+      - name: "Run Packer init"
+        run: "packer init packer/version.pkr.hcl"
+    
+      - name: "Run Packer fmt"
+        run: |
+            if ! packer fmt --check packer/.; then
+            echo "Packer fmt found formatting issues. Please run 'packer fmt' locally and commit the changes."
+            exit 1
+            fi
+    
+      - name: "Run Packer validate"
+        run: |
+          if ! packer validate packer/.; then
+          echo "Packer validation failed. Please fix the issues and try again."
+          exit 1
+          fi
+
+      - name: Install Zip
+        uses: montudor/action-zip@v1
+
+      - name: Build Application Artifact
+        run: "zip -r temp.zip ./ -x './packer/*' -x './.github/*' -x './node_modules/*'"
+
+      - name: 'Google Auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+
+      - name: 'Use gcloud CLI'
+        run: 'gcloud info'
+
+      - name: Set up Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: 'latest'
+
+      - name: 'Build Custom Image'
+        run: |
+          packer init packer/version.pkr.hcl
+          packer build packer/gcloud.pkr.hcl
