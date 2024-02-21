@@ -22,7 +22,7 @@ jobs:
         run: "zip -r temp.zip ./ -x './packer/*' -x './.github/*' -x './node_modules/*' './.git/*'"
 
       - name: "test"
-        run: "pwd"
+        run: "ls"
     
       - name: Set up Packer
         uses: hashicorp/setup-packer@main
