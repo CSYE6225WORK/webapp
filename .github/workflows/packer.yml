@@ -19,7 +19,10 @@ jobs:
         uses: montudor/action-zip@v1
 
       - name: Build Application Artifact
-        run: "zip -r temp.zip ./ -x './packer/*' -x './.github/*' -x './node_modules/*'"
+        run: "zip -r temp.zip ./ -x './packer/*' -x './.github/*' -x './node_modules/*' './.git/*'"
+
+      - name: "test"
+        run: "pwd"
     
       - name: Set up Packer
         uses: hashicorp/setup-packer@main
