@@ -43,7 +43,7 @@ build {
 
   // Transfer systemd file to custom image
   provisioner "file" {
-    source      = "./nodeapp.service"
+    source      = "./packer/nodeapp.service"
     destination = "/tmp/nodeapp.service"
   }
 
