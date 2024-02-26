@@ -5,7 +5,7 @@ source "googlecompute" "centos8Image" {
   ssh_username        = "packer"
   image_name          = "webapp-image"
   machine_type        = "e2-standard-8"
-  image_family       = "packer-centos-stream-8"
+  image_family        = "packer-centos-stream-8"
 }
 
 build {
