@@ -94,41 +94,44 @@ jobs:
 
       - name: 'Create a new Instance Template'
         run: |
-          gcloud compute instance-templates create ${{secrets.INSTANCE_TEMPLATES_NAME}} \
-            --region=${{secrets.REGION}}
-            --machine-type=${{secrets.INSTANCE_MACHINE_TYPE}} \
-            --boot-disk-type=${{secrets.BOOT_DISK_TYPE}} \
-            --boot-disk-size=${{secrets.BOOT_DISK_SIZE}} \
+          TEMPLATE_NAME="webapp-template-${GITHUB_RUN_ID}"
+          gcloud compute instance-templates create "$TEMPLATE_NAME" \
+            --region="us-east1"
+            --machine-type="e2-standard-2" \
+            --boot-disk-type="pd-balanced" \
+            --boot-disk-size="100GB" \
             --boot-disk-kms-key=${{secrets.KMS_KEY}} \
+            --boot-disk-auto-delete \
+            --boot-disk-device-name="webapp-disk" \
             --image-project=${{secrets.IMAGE_PROJECT}} \
             --image=${{secrets.INSTANCE_IMAGE}} \
-            --network=${{secrets.VPC_NETWORK}} \
-            --subnet=${{secrets.VPC_NETWORK_SUBNET}} \
-            --tags=${{secrets.INSTANCE_TAGS}} \
+            --instance-template-region="us-east1" \
+            --network-interface="network=vpc-network,subnet=webapp" \
+            --tags="webapp" \
             --service-account=${{secrets.SERVICE_ACCOUNT}} \
-            --scopes=${{secrets.SCOPES}} \
-            --metadata=startup-script="#!/bin/bash\n\
-            echo 'DATABASE_URL=mysql://webapp:iegvobNm@10.20.0.2/CSYE6225' > /opt/app/.env\n\
-            sudo pnpm run -C /opt/app prisma-migrate\n\
+            --scopes="cloud-platform" \
+            --metadata=startup-script="#!/bin/bash
+            sudo bash -c "echo 'DATABASE_URL=mysql://${{secrets.GCP_SQL_USER}}:${{secrets.GCP_SQL_PASSWORD}}@${{secrets.GCP_DATABASE_HOST}}/${{secrets.GCP_SQL_DATABASE}}' > /opt/app/.env"
+            sudo pnpm run -C /opt/app prisma-migrate
             sudo systemctl start nodeapp.service"
 
       - name: Update Managed Instance Group with New Template
         run: |
-          gcloud compute instance-groups managed set-instance-template ${{secrets.INSTANCE_GROUP_NAME}} \
-            --template=${{secrets.INSTANCE_TEMPLATES_NAME}} \
-            --region=${{secrets.REGION}}
+          gcloud compute instance-groups managed set-instance-template "web-instance-group-manager" \
+            --template="$TEMPLATE_NAME"  \
+            --region="us-east1"
 
       - name: Start Instance Group Rolling Update
         run: |
-          gcloud compute instance-groups managed rolling-action start-update ${{secrets.INSTANCE_GROUP_NAME}} \
-            --version="template=${{secrets.INSTANCE_TEMPLATES_NAME}}" \
-            --region=${{secrets.REGION}}
+          gcloud compute instance-groups managed rolling-action start-update "web-instance-group-manager" \
+            --version=template="$TEMPLATE_NAME" \
+            --region="us-east1"
 
       - name: Monitor for Rolling Update
         run: |
           status="IN_PROGRESS"
           while [ "$status" = "IN_PROGRESS" ]; do
-            status=$(gcloud compute instance-groups managed describe ${{secrets.INSTANCE_GROUP_NAME}} --region=${{secrets.REGION}} --format="value(status.versionTarget.isReached)")
+            status=$(gcloud compute instance-groups managed describe "$TEMPLATE_NAME" --region="us-east1" --format="value(status.versionTarget.isReached)")
             if [ "$status" = "True" ]; then
               echo "Update completed successfully."
               exit 0
