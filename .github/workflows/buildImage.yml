@@ -95,6 +95,7 @@ jobs:
       - name: 'Create a new Instance Template'
         run: |
           gcloud compute instance-templates create ${{secrets.INSTANCE_TEMPLATES_NAME}} \
+            --region=${{secrets.REGION}}
             --machine-type=${{secrets.INSTANCE_MACHINE_TYPE}} \
             --boot-disk-type=${{secrets.BOOT_DISK_TYPE}} \
             --boot-disk-size=${{secrets.BOOT_DISK_SIZE}} \
