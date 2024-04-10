@@ -3,7 +3,7 @@ source "googlecompute" "centos8Image" {
   source_image_family = "centos-stream-8"
   zone                = "us-east4-c"
   ssh_username        = "packer"
-  image_name          = "webapp-image-{{timestamp}}"
+  image_name          = "webapp-image"
   machine_type        = "e2-standard-8"
   image_family        = "packer-centos-stream-8"
 }

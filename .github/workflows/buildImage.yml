@@ -9,8 +9,8 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
-    env: 
-      DATABASE_URL: mysql://root:test@localhost:3306/Test_DB
+    env:
+      DATABASE_URL: ${{secrets.DATABASE_URL}}
 
     steps:
       - name: CheckOut
@@ -21,18 +21,18 @@ jobs:
 
       - name: Install Zip
         uses: montudor/action-zip@v1
-  
+
       - name: Build Application Artifact
         run: "zip -r temp.zip ./ -x './packer/*' -x './.github/*' -x './node_modules/*' './.git/*'"
 
       - name: Shutdown Ubuntu MySQL (SUDO)
         run: sudo service mysql stop
-      
+
       - name: Set up MySQL
         uses: mirromutth/mysql-action@v1.1
         with:
-          mysql database: 'Test_DB'
-          mysql root password: 'test'
+          mysql database: ${{secrets.TEST_DATABASE}}
+          mysql root password: ${{secrets.TEST_DATABASE_PASSWORD}}
 
       - name: Use NodeJS
         uses: actions/setup-node@v3
@@ -45,26 +45,26 @@ jobs:
 
       - name: Migrate Database
         run: npm run prisma-migrate
-        
+
       - name: Run testing
         run: npm run test
-      
+
       - name: Set up Packer
         uses: hashicorp/setup-packer@main
         with:
-          version: "latest"
+          version: 'latest'
 
-      - name: "Run Packer init"
-        run: "packer init packer/version.pkr.hcl"
-    
-      - name: "Run Packer fmt"
+      - name: 'Run Packer init'
+        run: 'packer init packer/version.pkr.hcl'
+
+      - name: 'Run Packer fmt'
         run: |
-            if ! packer fmt --check packer/.; then
-            echo "Packer fmt found formatting issues. Please run 'packer fmt' locally and commit the changes."
-            exit 1
-            fi
-    
-      - name: "Run Packer validate"
+          if ! packer fmt --check packer/.; then
+          echo "Packer fmt found formatting issues. Please run 'packer fmt' locally and commit the changes."
+          exit 1
+          fi
+
+      - name: 'Run Packer validate'
         run: |
           if ! packer validate packer/.; then
           echo "Packer validation failed. Please fix the issues and try again."
@@ -91,3 +91,48 @@ jobs:
         run: |
           packer init packer/version.pkr.hcl
           packer build packer/gcloud.pkr.hcl
+
+      - name: 'Create a new Instance Template'
+        run: |
+          gcloud compute instance-templates create ${{secrets.INSTANCE_TEMPLATES_NAME}} \
+          --description=${{secrets.INSTANCE_TEMPLATES_DESCRIPTION}} \
+          --machine-type=${{secrets.INSTANCE_MACHINE_TYPE}} \
+          --boot-disk-type=${{secrets.BOOT_DISK_TYPE}} \
+          --boot-disk-size=${{secrets.BOOT_DISK_SIZE}} \
+          --boot-disk-kms-key=${{secrets.KMS_KEY}} \
+          --image-project=${{secrets.IMAGE_PROJECT}} \
+          --image-family=${{secrets.IMAGE_FAMILY}} \
+          --image=${{secrets.INSTANCE_IMAGE}} \
+          --network=${{secrets.VPC_NETWORK}} \
+          --subnet=${{secrets.VPC_NETWORK_SUBNET}} \
+          --tags=${{secrets.INSTANCE_TAGS}} \
+          --service-account=${{secrets.SERVICE_ACCOUNT}} \
+          --scopes=${{secrets.SCOPES}} \
+          --metadata="startup-script=${{secrets.STARTUP_SCRIPT}}"
+
+      - name: Update Managed Instance Group with New Template
+        run: |
+          gcloud compute instance-groups managed set-instance-template ${{secrets.INSTANCE_GROUP_NAME}} \
+          --template=${{secrets.INSTANCE_TEMPLATES_NAME}} \
+          --region=${{secrets.REGION}}
+
+      - name: Start Instance Group Rolling Update
+        run: |
+          gcloud compute instance-groups managed rolling-action start-update ${{secrets.INSTANCE_GROUP_NAME}} \
+          --version="template=${{secrets.INSTANCE_TEMPLATES_NAME}}" \
+          --region=${{secrets.REGION}}
+
+      - name: Monitor for Rolling Update
+        run: |
+          status="IN_PROGRESS"
+          while [ "$status" = "IN_PROGRESS" ]; do
+            status=$(gcloud compute instance-groups managed describe ${{secrets.INSTANCE_GROUP_NAME}} --region=${{secrets.REGION}} --format="value(status.versionTarget.isReached)")
+            if [ "$status" = "True" ]; then
+              echo "Update completed successfully."
+              exit 0
+            elif [ "$status" = "False" ]; then
+              echo "Update failed."
+              exit 1
+            fi
+            sleep 30
+          done
