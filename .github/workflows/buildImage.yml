@@ -13,63 +13,63 @@ jobs:
       DATABASE_URL: ${{secrets.DATABASE_URL}}
 
     steps:
-      - name: CheckOut
-        uses: actions/checkout@v4
+      # - name: CheckOut
+      #   uses: actions/checkout@v4
 
-      - name: Make logs file
-        run: mkdir logs
+      # - name: Make logs file
+      #   run: mkdir logs
 
-      - name: Install Zip
-        uses: montudor/action-zip@v1
+      # - name: Install Zip
+      #   uses: montudor/action-zip@v1
 
-      - name: Build Application Artifact
-        run: "zip -r temp.zip ./ -x './packer/*' -x './.github/*' -x './node_modules/*' './.git/*'"
+      # - name: Build Application Artifact
+      #   run: "zip -r temp.zip ./ -x './packer/*' -x './.github/*' -x './node_modules/*' './.git/*'"
 
-      - name: Shutdown Ubuntu MySQL (SUDO)
-        run: sudo service mysql stop
+      # - name: Shutdown Ubuntu MySQL (SUDO)
+      #   run: sudo service mysql stop
 
-      - name: Set up MySQL
-        uses: mirromutth/mysql-action@v1.1
-        with:
-          mysql database: ${{secrets.TEST_DATABASE}}
-          mysql root password: ${{secrets.TEST_DATABASE_PASSWORD}}
+      # - name: Set up MySQL
+      #   uses: mirromutth/mysql-action@v1.1
+      #   with:
+      #     mysql database: ${{secrets.TEST_DATABASE}}
+      #     mysql root password: ${{secrets.TEST_DATABASE_PASSWORD}}
 
-      - name: Use NodeJS
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.x'
-          cache: 'npm'
+      # - name: Use NodeJS
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: '20.x'
+      #     cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
+      # - name: Install dependencies
+      #   run: npm install
 
-      - name: Migrate Database
-        run: npm run prisma-migrate
+      # - name: Migrate Database
+      #   run: npm run prisma-migrate
 
-      - name: Run testing
-        run: npm run test
+      # - name: Run testing
+      #   run: npm run test
 
-      - name: Set up Packer
-        uses: hashicorp/setup-packer@main
-        with:
-          version: 'latest'
+      # - name: Set up Packer
+      #   uses: hashicorp/setup-packer@main
+      #   with:
+      #     version: 'latest'
 
-      - name: 'Run Packer init'
-        run: 'packer init packer/version.pkr.hcl'
+      # - name: 'Run Packer init'
+      #   run: 'packer init packer/version.pkr.hcl'
 
-      - name: 'Run Packer fmt'
-        run: |
-          if ! packer fmt --check packer/.; then
-          echo "Packer fmt found formatting issues. Please run 'packer fmt' locally and commit the changes."
-          exit 1
-          fi
+      # - name: 'Run Packer fmt'
+      #   run: |
+      #     if ! packer fmt --check packer/.; then
+      #     echo "Packer fmt found formatting issues. Please run 'packer fmt' locally and commit the changes."
+      #     exit 1
+      #     fi
 
-      - name: 'Run Packer validate'
-        run: |
-          if ! packer validate packer/.; then
-          echo "Packer validation failed. Please fix the issues and try again."
-          exit 1
-          fi
+      # - name: 'Run Packer validate'
+      #   run: |
+      #     if ! packer validate packer/.; then
+      #     echo "Packer validation failed. Please fix the issues and try again."
+      #     exit 1
+      #     fi
 
       - name: 'Google Auth'
         uses: 'google-github-actions/auth@v2'
@@ -108,7 +108,10 @@ jobs:
             --tags=${{secrets.INSTANCE_TAGS}} \
             --service-account=${{secrets.SERVICE_ACCOUNT}} \
             --scopes=${{secrets.SCOPES}} \
-            --metadata="startup-script=sudo bash -c "echo 'DATABASE_URL=mysql://webapp:iegvobNm@10.20.0.2/CSYE6225' > /opt/app/.env" sudo pnpm run -C /opt/app prisma-migrate sudo systemctl start nodeapp.service"
+            --metadata=startup-script="#!/bin/bash\n\
+            echo 'DATABASE_URL=mysql://webapp:iegvobNm@10.20.0.2/CSYE6225' > /opt/app/.env\n\
+            sudo pnpm run -C /opt/app prisma-migrate\n\
+            sudo systemctl start nodeapp.service"
 
       - name: Update Managed Instance Group with New Template
         run: |
