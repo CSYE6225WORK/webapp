@@ -100,7 +100,6 @@ jobs:
             --boot-disk-size=${{secrets.BOOT_DISK_SIZE}} \
             --boot-disk-kms-key=${{secrets.KMS_KEY}} \
             --image-project=${{secrets.IMAGE_PROJECT}} \
-            --image-family=${{secrets.IMAGE_FAMILY}} \
             --image=${{secrets.INSTANCE_IMAGE}} \
             --network=${{secrets.VPC_NETWORK}} \
             --subnet=${{secrets.VPC_NETWORK_SUBNET}} \
