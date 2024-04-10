@@ -96,7 +96,7 @@ jobs:
         run: |
           TEMPLATE_NAME="webapp-template-${GITHUB_RUN_ID}"
           gcloud compute instance-templates create "$TEMPLATE_NAME" \
-            --region="us-east1"
+            --region="us-east1" \
             --machine-type="e2-standard-2" \
             --boot-disk-type="pd-balanced" \
             --boot-disk-size="100GB" \
@@ -117,18 +117,21 @@ jobs:
 
       - name: Update Managed Instance Group with New Template
         run: |
+          TEMPLATE_NAME="webapp-template-${GITHUB_RUN_ID}"
           gcloud compute instance-groups managed set-instance-template "web-instance-group-manager" \
             --template="$TEMPLATE_NAME"  \
             --region="us-east1"
 
       - name: Start Instance Group Rolling Update
         run: |
+          TEMPLATE_NAME="webapp-template-${GITHUB_RUN_ID}"
           gcloud compute instance-groups managed rolling-action start-update "web-instance-group-manager" \
             --version=template="$TEMPLATE_NAME" \
             --region="us-east1"
 
       - name: Monitor for Rolling Update
         run: |
+          TEMPLATE_NAME="webapp-template-${GITHUB_RUN_ID}"
           status="IN_PROGRESS"
           while [ "$status" = "IN_PROGRESS" ]; do
             status=$(gcloud compute instance-groups managed describe "$TEMPLATE_NAME" --region="us-east1" --format="value(status.versionTarget.isReached)")
