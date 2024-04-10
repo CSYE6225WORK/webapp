@@ -110,9 +110,9 @@ jobs:
             --tags="webapp" \
             --service-account=${{secrets.SERVICE_ACCOUNT}} \
             --scopes="cloud-platform" \
-            --metadata=startup-script="#!/bin/bash
-            sudo bash -c "echo 'DATABASE_URL=mysql://${{secrets.GCP_SQL_USER}}:${{secrets.GCP_SQL_PASSWORD}}@${{secrets.GCP_DATABASE_HOST}}/${{secrets.GCP_SQL_DATABASE}}' > /opt/app/.env"
-            sudo pnpm run -C /opt/app prisma-migrate
+            --metadata=startup-script="#!/bin/bash\n\
+            echo 'DATABASE_URL=mysql://${{secrets.GCP_SQL_USER}}:${{secrets.GCP_SQL_PASSWORD}}@${{secrets.GCP_DATABASE_HOST}}/${{secrets.GCP_SQL_DATABASE}}' > /opt/app/.env\n\
+            sudo pnpm run -C /opt/app prisma-migrate\n\
             sudo systemctl start nodeapp.service"
 
       - name: Update Managed Instance Group with New Template
