@@ -102,7 +102,6 @@ jobs:
             --boot-disk-kms-key=${{secrets.KMS_KEY}} \
             --boot-disk-auto-delete \
             --boot-disk-device-name="webapp-disk" \
-            --image-project=${{secrets.IMAGE_PROJECT}} \
             --image=${{secrets.INSTANCE_IMAGE}} \
             --instance-template-region="us-east1" \
             --network-interface="network=vpc-network,subnet=webapp" \
@@ -110,7 +109,7 @@ jobs:
             --service-account=${{secrets.SERVICE_ACCOUNT}} \
             --scopes="cloud-platform" \
             --metadata=startup-script="#!/bin/bash\n\
-            echo 'DATABASE_URL=mysql://${{secrets.GCP_SQL_USER}}:${{secrets.GCP_SQL_PASSWORD}}@${{secrets.GCP_DATABASE_HOST}}/${{secrets.GCP_SQL_DATABASE}}' > /opt/app/.env\n\
+            sudo bash -c 'echo 'DATABASE_URL=mysql://${{secrets.GCP_SQL_USER}}:${{secrets.GCP_SQL_PASSWORD}}@${{secrets.GCP_DATABASE_HOST}}/${{secrets.GCP_SQL_DATABASE}}' > /opt/app/.env'\n\
             sudo pnpm run -C /opt/app prisma-migrate\n\
             sudo systemctl start nodeapp.service"
 
@@ -130,7 +129,7 @@ jobs:
         run: |
           status="IN_PROGRESS"
           while [ "$status" = "IN_PROGRESS" ]; do
-            status=$(gcloud compute instance-groups managed describe "webapp-template-${GITHUB_RUN_ID}" --region="us-east1" --format="value(status.versionTarget.isReached)")
+            status=$(gcloud compute instance-groups managed describe "web-instance-group-manager" --region="us-east1" --format="value(status.versionTarget.isReached)")
             if [ "$status" = "True" ]; then
               echo "Update completed successfully."
               exit 0
