@@ -94,7 +94,7 @@ jobs:
 
       - name: 'Create a new Instance Template'
         run: |
-          gcloud compute instance-templates create "my-webapp-template" \
+          gcloud compute instance-templates create "webapp-template-${GITHUB_RUN_ID}" \
             --region="us-east1" \
             --machine-type="e2-standard-2" \
             --boot-disk-type="pd-balanced" \
@@ -117,20 +117,20 @@ jobs:
       - name: Update Managed Instance Group with New Template
         run: |
           gcloud compute instance-groups managed set-instance-template "web-instance-group-manager" \
-            --template="my-webapp-template"  \
+            --template="projects/${{secrets.GCP_PROJECT_ID}}/regions/us-east1/instanceTemplates/webapp-template-${GITHUB_RUN_ID}" \
             --region="us-east1"
 
       - name: Start Instance Group Rolling Update
         run: |
           gcloud compute instance-groups managed rolling-action start-update "web-instance-group-manager" \
-            --version=template="my-webapp-template" \
+            --version=template="projects/${{secrets.GCP_PROJECT_ID}}/regions/us-east1/instanceTemplates/webapp-template-${GITHUB_RUN_ID}" \
             --region="us-east1"
 
       - name: Monitor for Rolling Update
         run: |
           status="IN_PROGRESS"
           while [ "$status" = "IN_PROGRESS" ]; do
-            status=$(gcloud compute instance-groups managed describe "my-webapp-template" --region="us-east1" --format="value(status.versionTarget.isReached)")
+            status=$(gcloud compute instance-groups managed describe "webapp-template-${GITHUB_RUN_ID}" --region="us-east1" --format="value(status.versionTarget.isReached)")
             if [ "$status" = "True" ]; then
               echo "Update completed successfully."
               exit 0
