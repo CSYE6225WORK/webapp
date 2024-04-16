@@ -38,13 +38,13 @@ const request = supertest(app);
 describe('api integration test', () => {
   describe('get api/v1/healthz', () => {
     it('should return status 200', async () => {
-      const res = await request.get('/api/v2/healthz');
+      const res = await request.get('/api/v1/healthz');
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual({});
     });
 
     it('should return status 400', async () => {
-      const res = await request.get('/api/v2/healthz').send({
+      const res = await request.get('/api/v1/healthz').send({
         test: 'test'
       });
       expect(res.statusCode).toBe(400);
@@ -52,7 +52,7 @@ describe('api integration test', () => {
     });
 
     it('should return status 405', async () => {
-      const res = await request.post('/api/v2/healthz');
+      const res = await request.post('/api/v1/healthz');
       expect(res.statusCode).toBe(405);
       expect(res.body).toEqual({});
     });
@@ -60,7 +60,7 @@ describe('api integration test', () => {
 
   describe('get api/v1/404', () => {
     it('should return status 404', async () => {
-      const res = await request.get('/api/v2/404');
+      const res = await request.get('/api/v1/404');
       expect(res.statusCode).toBe(404);
       expect(res.body).toEqual({});
     });
@@ -68,7 +68,7 @@ describe('api integration test', () => {
 
   describe('post api/v1/user', () => {
     it('validate account create success', async () => {
-      const res = await request.post('/api/v2/user').send({
+      const res = await request.post('/api/v1/user').send({
         first_name: 'test',
         last_name: 'test',
         password: 'test',
@@ -81,7 +81,7 @@ describe('api integration test', () => {
     });
 
     it('should return status 400', async () => {
-      const res = await request.post('/api/v2/user').send({
+      const res = await request.post('/api/v1/user').send({
         first_name: 'test',
         last_name: 'test',
         password: 'test'
@@ -93,7 +93,7 @@ describe('api integration test', () => {
     });
 
     it('should return status 400', async () => {
-      const res = await request.post('/api/v2/user').send({
+      const res = await request.post('/api/v1/user').send({
         id: '1'
       });
       expect(res.statusCode).toBe(400);
@@ -103,7 +103,7 @@ describe('api integration test', () => {
     });
 
     it('should return status 400', async () => {
-      const res = await request.post('/api/v2/user').send({
+      const res = await request.post('/api/v1/user').send({
         test: 'test'
       });
       expect(res.statusCode).toBe(400);
@@ -113,7 +113,7 @@ describe('api integration test', () => {
     });
 
     it('should return status 400', async () => {
-      const res = await request.post('/api/v2/user').send({
+      const res = await request.post('/api/v1/user').send({
         first_name: 'test',
         last_name: 'test',
         password: 'test',
@@ -126,13 +126,13 @@ describe('api integration test', () => {
 
   describe('get api/v1/user/self', () => {
     it('should return status 401', async () => {
-      const res = await request.get('/api/v2/user/self').auth('sasd', 'asdsa', { type: 'basic' });
+      const res = await request.get('/api/v1/user/self').auth('sasd', 'asdsa', { type: 'basic' });
       expect(res.statusCode).toBe(401);
     });
 
     it('should return status 400', async () => {
       const res = await request
-        .get('/api/v2/user/self')
+        .get('/api/v1/user/self')
         .auth('test@example.com', 'test', { type: 'basic' })
         .send({
           test: 'test'
@@ -143,7 +143,7 @@ describe('api integration test', () => {
 
     it('validate account exists', async () => {
       const res = await request
-        .get('/api/v2/user/self')
+        .get('/api/v1/user/self')
         .auth('test@example.com', 'test', { type: 'basic' });
       expect(res.statusCode).toBe(200);
       const { id, account_created, account_updated, ...rest } = res.body.data;
@@ -157,9 +157,9 @@ describe('api integration test', () => {
     });
   });
 
-  describe('put api/v2/user', () => {
+  describe('put api/v1/user', () => {
     it('should return status 401', async () => {
-      const res = await request.put('/api/v2/user').auth('asds', 'asdasd', { type: 'basic' }).send({
+      const res = await request.put('/api/v1/user').auth('asds', 'asdasd', { type: 'basic' }).send({
         first_name: 'Jason',
         last_name: 'Li'
       });
@@ -168,7 +168,7 @@ describe('api integration test', () => {
 
     it('should return status 400', async () => {
       const res = await request
-        .put('/api/v2/user')
+        .put('/api/v1/user')
         .auth('test@example.com', 'test', { type: 'basic' })
         .send({
           test: 'test'
@@ -178,7 +178,7 @@ describe('api integration test', () => {
 
     it('should return status 400', async () => {
       const res = await request
-        .put('/api/v2/user')
+        .put('/api/v1/user')
         .auth('test@example.com', 'test', { type: 'basic' })
         .send({
           username: 'jason'
@@ -188,14 +188,14 @@ describe('api integration test', () => {
 
     it('validate the account was updated', async () => {
       const res1 = await request
-        .put('/api/v2/user')
+        .put('/api/v1/user')
         .auth('test@example.com', 'test', { type: 'basic' })
         .send({
           first_name: 'Jason',
           last_name: 'Li'
         });
       const res2 = await request
-        .get('/api/v2/user/self')
+        .get('/api/v1/user/self')
         .auth('test@example.com', 'test', { type: 'basic' });
       expect(res1.statusCode).toBe(204);
       expect(res2.statusCode).toBe(200);
@@ -211,13 +211,13 @@ describe('api integration test', () => {
 
     it('validate the account password was updated', async () => {
       const res1 = await request
-        .put('/api/v2/user')
+        .put('/api/v1/user')
         .auth('test@example.com', 'test', { type: 'basic' })
         .send({
           password: '123'
         });
       const res2 = await request
-        .get('/api/v2/user/self')
+        .get('/api/v1/user/self')
         .auth('test@example.com', '123', { type: 'basic' });
       expect(res1.statusCode).toBe(204);
       expect(res2.statusCode).toBe(200);
