@@ -44,8 +44,8 @@ app.all('*', function (req, res, next) {
   next();
 });
 
-app.use('/api/v1/healthz', headlthzRouter);
-app.use('/api/v1/user', usersRouter);
+app.use('/api/v2/healthz', headlthzRouter);
+app.use('/api/v2/user', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
